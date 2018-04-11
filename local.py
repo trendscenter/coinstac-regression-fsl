@@ -16,8 +16,6 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import statsmodels.api as sm
 
-np.seterr(all='raise')
-
 
 def local_0(args):
     input_list = args["input"]
@@ -186,7 +184,7 @@ def local_2(args):
 
 if __name__ == '__main__':
 
-    parsed_args = json.loads(sys.argv[1])
+    parsed_args = json.loads(sys.stdin.read())
     phase_key = list(reg.listRecursive(parsed_args, 'computation_phase'))
 
     if not phase_key:
