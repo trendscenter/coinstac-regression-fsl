@@ -9,29 +9,24 @@ import numpy as np
 import pandas as pd
 import sys
 import regression as reg
-import warnings
 from parsers import fsl_parser
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
+from local_ancillary import gather_local_stats, add_site_covariates
 
 
 def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y, y_labels) = fsl_parser(args)
+    (X, y) = fsl_parser(args)
 
     computation_output_dict = {
         "output": {
             "computation_phase": "local_0"
         },
         "cache": {
-            "covariates": X.values.tolist(),
-            "dependents": y.values.tolist(),
+            "covariates": X.to_json(),
+            "dependents": y.to_json(),
             "lambda": lamb,
-            "y_labels": y_labels
         },
     }
 
@@ -39,65 +34,14 @@ def local_0(args):
 
 
 def local_1(args):
-    lamb = args["cache"]["lambda"]
-    X = args["cache"]["covariates"]
-    y = args["cache"]["dependents"]
-    y_labels = args["cache"]["y_labels"]
-    y = pd.DataFrame(y, columns=y_labels)
+    X = pd.read_json(args["cache"]["covariates"])
+    y = pd.read_json(args["cache"]["dependents"])
+    y_labels = list(y.columns)
 
-    biased_X = sm.add_constant(X)
-    meanY_vector, lenY_vector = [], []
+    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
 
-    local_params = []
-    local_sse = []
-    local_pvalues = []
-    local_tvalues = []
-    local_rsquared = []
-
-    for column in y.columns:
-        curr_y = y[column].values
-        meanY_vector.append(np.mean(curr_y))
-        lenY_vector.append(len(y))
-
-        # Printing local stats as well
-        model = sm.OLS(curr_y, biased_X.astype(float)).fit()
-        local_params.append(model.params)
-        local_sse.append(model.ssr)
-        try:
-            local_pvalues.append(model.pvalues)
-        except FloatingPointError:
-            local_pvalues.append(np.array([]))
-        try:
-            local_tvalues.append(model.tvalues)
-        except FloatingPointError:
-            local_tvalues.append(np.array([]))
-        local_rsquared.append(model.rsquared_adj)
-
-    keys = ["beta", "sse", "pval", "tval", "rsquared"]
-    local_stats_list = []
-    for index, _ in enumerate(y_labels):
-        values = [
-            local_params[index].tolist(), local_sse[index],
-            local_pvalues[index].tolist(), local_tvalues[index].tolist(),
-            local_rsquared[index]
-        ]
-        local_stats_dict = {key: value for key, value in zip(keys, values)}
-        local_stats_list.append(local_stats_dict)
-
-    # +++++++++++++++++++++ Adding site covariate columns +++++++++++++++++++++
-    site_covar_list = args["input"]["site_covar_list"]
-
-    site_matrix = np.zeros(
-        (np.array(X).shape[0], len(site_covar_list)), dtype=int)
-    site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
-
-    select_cols = [
-        col for col in site_df.columns if args["state"]["clientId"] in col
-    ]
-
-    site_df[select_cols] = 1
-    biased_X = np.concatenate((biased_X, site_df.values), axis=1)
-    # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    augmented_X = add_site_covariates(args, X)
+    biased_X = augmented_X.values
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
@@ -113,9 +57,7 @@ def local_1(args):
             "computation_phase": "local_1"
         },
         "cache": {
-            "covariates": biased_X.tolist(),
-            "dependents": y.values.tolist(),
-            "lambda": lamb
+            "covariates": augmented_X.to_json(),
         },
     }
     return json.dumps(computation_output_dict)
@@ -151,14 +93,13 @@ def local_2(args):
     cache_list = args["cache"]
     input_list = args["input"]
 
-    X = cache_list["covariates"]
-    y = cache_list["dependents"]
-    biased_X = sm.add_constant(X)
+    X = pd.read_json(cache_list["covariates"])
+    y = pd.read_json(cache_list["dependents"])
+    biased_X = np.array(X)
 
     avg_beta_vector = input_list["avg_beta_vector"]
     mean_y_global = input_list["mean_y_global"]
 
-    y = pd.DataFrame(y)
     SSE_local, SST_local = [], []
     for index, column in enumerate(y.columns):
         curr_y = y[column].values

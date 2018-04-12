@@ -15,8 +15,7 @@ def parse_for_each_y(args, X_files, y_files, dependent):
     for file in y_files:
         if file.split('-')[-1] in X_files:
             with open(
-                    os.path.join(args["state"]["baseDirectory"],
-                                 file)) as fh:
+                    os.path.join(args["state"]["baseDirectory"], file)) as fh:
                 for line in fh:
                     if line.startswith(dependent[0]):
                         y.append(float(line.split('\t')[1]))
@@ -50,11 +49,6 @@ def fsl_parser(args):
     X_files = list(X_df['freesurferfile'])
 
     X = X_df[X_labels]
-#    xs = X_labels
-#    ys = X_types
-#    result = [x for x, y in zip(xs, ys) if y == 'boolean']
-#    pd.options.mode.chained_assignment = None  # default='warn'
-#    X[result] = (X[result] == 'True').astype(int)
     X = X.apply(pd.to_numeric, errors='ignore')
     X = X * 1
 
@@ -65,7 +59,7 @@ def fsl_parser(args):
     y = pd.DataFrame.from_records(y_list, columns=y_labels)
 
     return (
-        X, y, y_labels
+        X, y
     )  # Ask about labels being available at this level without being passed around
 
 
@@ -110,6 +104,6 @@ def vbm_parser(args):
     y_list = nifti_to_data(args, X_files, y_files)
     y = pd.DataFrame.from_records(y_list)
 
-    X.isControl = X.isControl.astype(int)  # need to generalize this line
+    X = X * 1
 
     return (X, y)
