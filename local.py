@@ -38,9 +38,6 @@ def local_1(args):
     y = pd.read_json(args["cache"]["dependents"], orient='records')
     y_labels = list(y.columns)
 
-    if args["state"]["clientId"] == 'local4':
-        raise Exception(X)
-
     meanY_vector, lenY_vector, local_stats_list = gather_local_stats(args, X, y)
 
     augmented_X = add_site_covariates(args, X)
