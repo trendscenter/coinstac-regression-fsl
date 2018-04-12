@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "decentralized regression normal equation demo",
-    "id": "drne_test",
+    "id": "drne_fsl",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/mrn-code\/coinstac_drne_fsl",
     "description": "a test from decentralized regression normal equation"

@@ -24,8 +24,8 @@ def local_0(args):
             "computation_phase": "local_0"
         },
         "cache": {
-            "covariates": X.to_json(),
-            "dependents": y.to_json(),
+            "covariates": X.to_json(orient='records'),
+            "dependents": y.to_json(orient='records'),
             "lambda": lamb,
         },
     }
@@ -34,11 +34,14 @@ def local_0(args):
 
 
 def local_1(args):
-    X = pd.read_json(args["cache"]["covariates"])
-    y = pd.read_json(args["cache"]["dependents"])
+    X = pd.read_json(args["cache"]["covariates"], orient='records')
+    y = pd.read_json(args["cache"]["dependents"], orient='records')
     y_labels = list(y.columns)
 
-    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(X, y)
+    if args["state"]["clientId"] == 'local4':
+        raise Exception(X)
+
+    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(args, X, y)
 
     augmented_X = add_site_covariates(args, X)
     biased_X = augmented_X.values
@@ -57,7 +60,7 @@ def local_1(args):
             "computation_phase": "local_1"
         },
         "cache": {
-            "covariates": augmented_X.to_json(),
+            "covariates": augmented_X.to_json(orient='records'),
         },
     }
     return json.dumps(computation_output_dict)
@@ -93,8 +96,8 @@ def local_2(args):
     cache_list = args["cache"]
     input_list = args["input"]
 
-    X = pd.read_json(cache_list["covariates"])
-    y = pd.read_json(cache_list["dependents"])
+    X = pd.read_json(cache_list["covariates"], orient='records')
+    y = pd.read_json(cache_list["dependents"], orient='records')
     biased_X = np.array(X)
 
     avg_beta_vector = input_list["avg_beta_vector"]
