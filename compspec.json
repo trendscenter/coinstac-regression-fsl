@@ -1,11 +1,8 @@
 {
   "meta": {
-<<<<<<< HEAD
     "name": "decentralized regression normal equation demo",
     "id": "drne_fsl",
-=======
     "name": "DRNE FreeSurfer",
->>>>>>> 2a4001a88ed110b38f88d72132537c186feeae25
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
     "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
