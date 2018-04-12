@@ -1,10 +1,9 @@
 {
   "meta": {
-    "name": "decentralized regression normal equation demo",
-    "id": "drne_test",
+    "name": "DRNE FreeSurfer",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/mrn-code\/coinstac_drne_fsl",
-    "description": "a test from decentralized regression normal equation"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
+    "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
   },
   "computation": {
     "type": "docker",
@@ -22,20 +21,113 @@
       ]
     },
     "input": {
-      "covariates": {
-        "type": "array"
+      "lambda":
+      {
+        "defaultValue": 0,
+        "label": "Lambda",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
       },
-      "dependents": {
-        "type": "array"
+      "covariates":
+      {
+        "label": "Covariates",
+        "type": "array",
+        "items": ["boolean", "number"]
       },
-      "lambda": {
-        "type": "number"
+      "data": {
+        "label": "Data",
+        "type": "array",
+        "items": ["FreeSurfer"],
+        "extensions": [["csv", "txt"]]
       }
     },
     "output": {
-      "Beta": {
-        "type": "array"
+      "regressions": {
+        "label": "Regressions",
+        "type": "array",
+        "items": {
+          "global_stats": {
+            "label": "Global Stats",
+            "type": "object",
+            "items": {
+              "avg_beta_vector": {
+                "label": "Avg Beta Vector",
+                "type": "array"
+              },
+              "r2_global": {
+                "label": "R2 Global",
+                "type": "number"
+              },
+              "ts_global": {
+                "label": "TS Global",
+                "type": "array"
+              },
+              "ps_global": {
+                "label": "PS Global",
+                "type": "number"
+              },
+              "dof_global": {
+                "label": "DOF Global",
+                "type": "array"
+              }
+            }
+          },
+          "local_stats": {
+            "label": "Local Stats",
+            "type": "object",
+            "items": {
+              "beta": {
+                "label": "Beta",
+                "type": "array"
+              },
+              "pval": {
+                "label": "PVal",
+                "type": "array"
+              },
+              "rsquared": {
+                "label": "R Squared",
+                "type": "number"
+              },
+              "sse": {
+                "label": "SSE",
+                "type": "number"
+              },
+              "tval": {
+                "label": "TVal",
+                "type": "array"
+              }
+            }
+          },
+          "ROI": {
+            "label": "Region of Interest",
+            "type": "string"
+          }
+        }
       }
-    }
+    },
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "regressions",
+            "subtables": [
+              {
+                "source": "global_stats",
+                "subtitle": "ROI"
+              },
+              {
+                "source": "local_stats",
+                "subtitle": "ROI",
+                "subtables": "by-key"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
