@@ -10,8 +10,6 @@ import scipy as sp
 import numpy as np
 import regression as reg
 
-np.seterr(all='ignore')
-
 
 def remote_0(args):
     input_list = args["input"]
