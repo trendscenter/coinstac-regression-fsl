@@ -4,7 +4,7 @@
 This script includes the local computations for decentralized regression with
 normal equation including decentralized statistic calculation
 """
-import json
+import ujson as json
 import numpy as np
 import pandas as pd
 import sys
