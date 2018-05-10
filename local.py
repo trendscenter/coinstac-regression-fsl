@@ -10,7 +10,8 @@ import pandas as pd
 import sys
 import regression as reg
 from parsers import fsl_parser
-from local_ancillary import gather_local_stats, add_site_covariates
+from local_ancillary import add_site_covariates
+from local_ancillary import mean_and_len_y, local_stats_to_dict
 
 
 def local_0(args):
@@ -38,7 +39,9 @@ def local_1(args):
     y = pd.read_json(args["cache"]["dependents"], orient='records')
     y_labels = list(y.columns)
 
-    meanY_vector, lenY_vector, local_stats_list = gather_local_stats(args, X, y)
+    meanY_vector, lenY_vector = mean_and_len_y(y)
+
+    _, local_stats_list = local_stats_to_dict(X, y)
 
     augmented_X = add_site_covariates(args, X)
     biased_X = augmented_X.values
@@ -105,7 +108,7 @@ def local_2(args):
     for index, column in enumerate(y.columns):
         curr_y = y[column].values
         SSE_local.append(
-            reg.sum_squared_error(biased_X, curr_y, avg_beta_vector))
+            reg.sum_squared_error(biased_X, curr_y, avg_beta_vector[index]))
         SST_local.append(
             np.sum(np.square(np.subtract(curr_y, mean_y_global[index]))))
 
