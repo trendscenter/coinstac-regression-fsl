@@ -1,6 +1,7 @@
 matplotlib
 nilearn
 numba
+scipy
 scikit-learn
 statsmodels
 ujson

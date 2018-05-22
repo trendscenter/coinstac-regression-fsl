@@ -34,6 +34,8 @@ def remote_0(args):
 def remote_1(args):
     input_list = args["input"]
     userID = list(input_list)[0]
+
+    X_labels = input_list[userID]["X_labels"]
     y_labels = input_list[userID]["y_labels"]
 
     all_local_stats_dicts = [
@@ -72,6 +74,7 @@ def remote_1(args):
             "avg_beta_vector": avg_beta_vector.tolist(),
             "mean_y_global": mean_y_global.tolist(),
             "dof_global": dof_global.tolist(),
+            "X_labels": X_labels,
             "y_labels": y_labels,
             "local_stats_dict": all_local_stats_dicts
         }
@@ -121,6 +124,8 @@ def remote_2(args):
 
     """
     input_list = args["input"]
+
+    X_labels = args["cache"]["X_labels"]
     y_labels = args["cache"]["y_labels"]
     all_local_stats_dicts = args["cache"]["local_stats_dict"]
 
@@ -161,11 +166,11 @@ def remote_2(args):
 
     # Block of code to print just global stats
     keys1 = [
-        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global"
+        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global", "covariate_labels"
     ]
     global_dict_list = get_stats_to_dict(keys1, avg_beta_vector,
                                          r_squared_global, ts_global,
-                                         ps_global, dof_global)
+                                         ps_global, dof_global, [X_labels])
 
     # Print Everything
     keys2 = ["ROI", "global_stats", "local_stats"]

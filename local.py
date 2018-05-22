@@ -37,6 +37,8 @@ def local_0(args):
 def local_1(args):
     X = pd.read_json(args["cache"]["covariates"], orient='records')
     y = pd.read_json(args["cache"]["dependents"], orient='records')
+
+    X_labels = ['const'] + list(X.columns)
     y_labels = list(y.columns)
 
     meanY_vector, lenY_vector = mean_and_len_y(y)
@@ -56,6 +58,7 @@ def local_1(args):
             "mean_y_local": meanY_vector,
             "count_local": lenY_vector,
             "local_stats_list": local_stats_list,
+            "X_labels": X_labels,
             "y_labels": y_labels,
             "computation_phase": "local_1"
         },
