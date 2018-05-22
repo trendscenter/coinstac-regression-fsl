@@ -38,7 +38,6 @@ def local_1(args):
     X = pd.read_json(args["cache"]["covariates"], orient='records')
     y = pd.read_json(args["cache"]["dependents"], orient='records')
 
-    X_labels = ['const'] + list(X.columns)
     y_labels = list(y.columns)
 
     meanY_vector, lenY_vector = mean_and_len_y(y)
@@ -46,6 +45,9 @@ def local_1(args):
     _, local_stats_list = local_stats_to_dict(X, y)
 
     augmented_X = add_site_covariates(args, X)
+
+    X_labels = list(augmented_X.columns)
+
     biased_X = augmented_X.values
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
