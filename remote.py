@@ -9,6 +9,7 @@ import sys
 import scipy as sp
 import numpy as np
 import regression as reg
+from itertools import repeat
 from remote_ancillary import get_stats_to_dict
 
 
@@ -16,8 +17,8 @@ def remote_0(args):
     input_list = args["input"]
     site_ids = list(input_list.keys())
     site_covar_list = [
-        '{}_{}'.format('site', label)
-        for index, label in enumerate(site_ids) if index
+        '{}_{}'.format('site', label) for index, label in enumerate(site_ids)
+        if index
     ]
 
     computation_output_dict = {
@@ -166,11 +167,13 @@ def remote_2(args):
 
     # Block of code to print just global stats
     keys1 = [
-        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global", "covariate_labels"
+        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global",
+        "covariate_labels"
     ]
     global_dict_list = get_stats_to_dict(keys1, avg_beta_vector,
                                          r_squared_global, ts_global,
-                                         ps_global, dof_global, [X_labels])
+                                         ps_global, dof_global,
+                                         repeat([X_labels], len(y_labels)))
 
     # Print Everything
     keys2 = ["ROI", "global_stats", "local_stats"]
