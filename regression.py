@@ -13,8 +13,6 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import statsmodels.api as sm
 
-np.seterr(all='ignore')
-
 
 def list_recursive(d, key):
     for k, v in d.items():
