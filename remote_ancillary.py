@@ -66,10 +66,10 @@ def print_pvals(args, ps_global, ts_global):
             display_mode='ortho',
             colorbar=True)
 
-#        if 'display' in locals():
-#            plotting.plot_stat_map(
-#                clipped_img,
-#                cut_coords=display.cut_coords)
-#        else:
-#            display = plotting.plot_stat_map(
-#                clipped_img)
+        if 'display' in locals():
+            plotting.plot_stat_map(
+                clipped_img,
+                cut_coords=display.cut_coords)
+        else:
+            display = plotting.plot_stat_map(
+                clipped_img)
