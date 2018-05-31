@@ -11,7 +11,7 @@ import sys
 import regression as reg
 from parsers import fsl_parser
 from local_ancillary import add_site_covariates
-from local_ancillary import local_stats_to_dict_fsl
+from local_ancillary import local_stats_to_dict_fsl, ignore_nans
 
 
 def local_0(args):
@@ -107,21 +107,24 @@ def local_2(args):
     avg_beta_vector = input_list["avg_beta_vector"]
     mean_y_global = input_list["mean_y_global"]
 
-    SSE_local, SST_local = [], []
+    SSE_local, SST_local, varX_matrix_local = [], [], []
     for index, column in enumerate(y.columns):
-        curr_y = y[column].values
+        curr_y = y[column]
+
+        X_, y_ = ignore_nans(biased_X, curr_y)
+
         SSE_local.append(
             reg.sum_squared_error(biased_X, curr_y, avg_beta_vector[index]))
         SST_local.append(
             np.sum(np.square(np.subtract(curr_y, mean_y_global[index]))))
 
-    varX_matrix_local = np.dot(biased_X.T, biased_X)
+        varX_matrix_local.append(np.dot(biased_X.T, biased_X).tolist())
 
     computation_output = {
         "output": {
             "SSE_local": SSE_local,
             "SST_local": SST_local,
-            "varX_matrix_local": varX_matrix_local.tolist(),
+            "varX_matrix_local": varX_matrix_local,
             "computation_phase": 'local_2'
         },
         "cache": {}

@@ -21,12 +21,16 @@ def remote_0(args):
         if index
     ]
 
-    computation_output_dict = {
-        "output": {
+    output_dict = {
             "site_covar_list": site_covar_list,
             "computation_phase": "remote_0"
-        },
-        "cache": {}
+        }
+
+    cache_dict = {}
+
+    computation_output_dict = {
+        "output": output_dict,
+        "cache": cache_dict
     }
 
     return json.dumps(computation_output_dict)
@@ -65,23 +69,24 @@ def remote_1(args):
 
     dof_global = sum(count_y_local) - avg_beta_vector.shape[1]
 
-    computation_output_dict = {
-        "output": {
-            "avg_beta_vector": avg_beta_vector.tolist(),
-            "mean_y_global": mean_y_global.tolist(),
-            "computation_phase": "remote_1"
-        },
-        "cache": {
-            "avg_beta_vector": avg_beta_vector.tolist(),
-            "mean_y_global": mean_y_global.tolist(),
-            "dof_global": dof_global.tolist(),
-            "X_labels": X_labels,
-            "y_labels": y_labels,
-            "local_stats_dict": all_local_stats_dicts
-        }
+    output_dict = {
+        "avg_beta_vector": avg_beta_vector.tolist(),
+        "mean_y_global": mean_y_global.tolist(),
+        "computation_phase": "remote_1"
     }
 
-    return json.dumps(computation_output_dict)
+    cache_dict = {
+        "avg_beta_vector": avg_beta_vector.tolist(),
+        "mean_y_global": mean_y_global.tolist(),
+        "dof_global": dof_global.tolist(),
+        "X_labels": X_labels,
+        "y_labels": y_labels,
+        "local_stats_dict": all_local_stats_dicts
+    }
+
+    computation_output = {"output": output_dict, "cache": cache_dict}
+
+    return json.dumps(computation_output)
 
 
 def remote_2(args):
@@ -149,9 +154,9 @@ def remote_2(args):
     ps_global = []
 
     for i in range(len(MSE)):
-        var_covar_beta_global = MSE[i] * sp.linalg.inv(varX_matrix_global)
+        var_covar_beta_global = MSE[i] * sp.linalg.inv(varX_matrix_global[i])
         se_beta_global = np.sqrt(var_covar_beta_global.diagonal())
-        ts = avg_beta_vector[i] / se_beta_global
+        ts = (avg_beta_vector[i] / se_beta_global).tolist()
         ps = reg.t_to_p(ts, dof_global[i])
         ts_global.append(ts)
         ps_global.append(ps)
