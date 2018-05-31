@@ -11,7 +11,7 @@ import sys
 import regression as reg
 from parsers import fsl_parser
 from local_ancillary import add_site_covariates
-from local_ancillary import mean_and_len_y, local_stats_to_dict
+from local_ancillary import local_stats_to_dict_fsl
 
 
 def local_0(args):
@@ -40,9 +40,7 @@ def local_1(args):
 
     y_labels = list(y.columns)
 
-    meanY_vector, lenY_vector = mean_and_len_y(y)
-
-    _, local_stats_list = local_stats_to_dict(X, y)
+    _, local_stats_list, meanY_vector, lenY_vector = local_stats_to_dict_fsl(X, y)
 
     augmented_X = add_site_covariates(args, X)
 
