@@ -22,16 +22,13 @@ def remote_0(args):
     ]
 
     output_dict = {
-            "site_covar_list": site_covar_list,
-            "computation_phase": "remote_0"
-        }
+        "site_covar_list": site_covar_list,
+        "computation_phase": "remote_0"
+    }
 
     cache_dict = {}
 
-    computation_output_dict = {
-        "output": output_dict,
-        "cache": cache_dict
-    }
+    computation_output_dict = {"output": output_dict, "cache": cache_dict}
 
     return json.dumps(computation_output_dict)
 
@@ -52,6 +49,8 @@ def remote_1(args):
     ]
 
     beta_vector_1 = sum(beta_vector_0)
+    beta_vector_1 = beta_vector_1 + input_list[userID]["lambda"] * np.eye(
+        beta_vector_1.shape[0])
 
     avg_beta_vector = np.matrix.transpose(
         sum([
