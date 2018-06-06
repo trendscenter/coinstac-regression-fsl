@@ -167,7 +167,7 @@ def add_site_covariates(args, X):
 
     select_cols = [
         col for col in site_df.columns
-        if args["state"]["clientId"] in col[len('site_')]
+        if args["state"]["clientId"] in col[len('site_'):]
     ]
 
     site_df[select_cols] = 1
