@@ -52,9 +52,6 @@ def local_1(args):
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
 
-#    if args["state"]["clientId"] == 'local0':
-#        raise Exception(XtransposeX_local)
-
     computation_output_dict = {
         "output": {
             "XtransposeX_local": XtransposeX_local.tolist(),
@@ -66,7 +63,6 @@ def local_1(args):
             "y_labels": y_labels,
             "lambda": lamb,
             "computation_phase": "local_1",
-            "biased_X": biased_X.tolist()
         },
         "cache": {
             "covariates": augmented_X.to_json(orient='records'),
