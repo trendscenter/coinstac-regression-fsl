@@ -70,12 +70,13 @@ def local_stats_to_dict_vbm(X, y):
 
     pvalues = 2 * sp.stats.t.sf(np.abs(tvalues), dof_global)
 
-    keys = ["beta", "sse", "pval", "tval", "rsquared"]
+    keys = ["beta", "sse", "tval", "pval", "rsquared"]
 
     values1 = pd.DataFrame(
         list(
-            zip(params.T.tolist(), sse.tolist(), pvalues.T.tolist(),
-                tvalues.T.tolist(), rsquared.tolist())),
+            zip(params.T.tolist(),
+                sse.tolist(),
+                tvalues.T.tolist(), pvalues.T.tolist(), rsquared.tolist())),
         columns=keys)
 
     local_stats_list = values1.to_dict(orient='records')
@@ -138,13 +139,13 @@ def local_stats_to_dict_fsl(X, y):
         local_tvalues.append(model.tvalues)
         local_rsquared.append(model.rsquared_adj)
 
-    keys = ["beta", "sse", "pval", "tval", "rsquared", "covariate_labels"]
+    keys = ["beta", "sse", "tval", "pval", "rsquared", "covariate_labels"]
     local_stats_list = []
 
     for index, _ in enumerate(y_labels):
         values = [
             local_params[index].tolist(), local_sse[index],
-            local_pvalues[index].tolist(), local_tvalues[index].tolist(),
+            local_tvalues[index].tolist(), local_pvalues[index].tolist(),
             local_rsquared[index], X_labels
         ]
         local_stats_dict = {key: value for key, value in zip(keys, values)}
