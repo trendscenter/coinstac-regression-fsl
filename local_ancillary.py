@@ -137,7 +137,7 @@ def local_stats_to_dict_fsl(X, y):
         local_sse.append(model.ssr)
         local_pvalues.append(model.pvalues)
         local_tvalues.append(model.tvalues)
-        local_rsquared.append(model.rsquared_adj)
+        local_rsquared.append(model.rsquared)
 
     keys = ["beta", "sse", "tval", "pval", "rsquared", "covariate_labels"]
     local_stats_list = []
