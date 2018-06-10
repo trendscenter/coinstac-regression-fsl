@@ -4,6 +4,7 @@
 This script includes the remote computations for single-shot ridge
 regression with decentralized statistic calculation
 """
+import itertools
 import numpy as np
 import pandas as pd
 import regression as reg
@@ -14,6 +15,13 @@ from remote_ancillary import get_stats_to_dict
 
 def remote_0(args):
     input_list = args["input"]
+    missing_columns = [
+        input_list[site]['missing_columns'] for site in input_list
+    ]
+
+    missing_columns = list(
+        set(list(itertools.chain.from_iterable(missing_columns))))
+
     site_ids = list(input_list.keys())
     site_covar_list = [
         '{}_{}'.format('site', label) for index, label in enumerate(site_ids)
@@ -21,11 +29,12 @@ def remote_0(args):
     ]
 
     output_dict = {
+        "missing_columns": missing_columns,
         "site_covar_list": site_covar_list,
         "computation_phase": "remote_0"
     }
 
-    cache_dict = {}
+    cache_dict = {"missing_columns": missing_columns}
 
     computation_output_dict = {"output": output_dict, "cache": cache_dict}
 
@@ -206,7 +215,13 @@ def remote_2(args):
     keys2 = ["ROI", "global_stats", "local_stats"]
     dict_list = get_stats_to_dict(keys2, y_labels, global_dict_list, a_dict)
 
-    output_dict = {"regressions": dict_list}
+    if args["cache"]["missing_columns"]:
+        output_dict = {
+            "regressions": dict_list,
+            "missing_ROI": args["cache"]["missing_columns"]
+        }
+    else:
+        output_dict = {"regressions": dict_list}
 
     computation_output = {"output": output_dict, "success": True}
 

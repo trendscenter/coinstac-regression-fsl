@@ -20,15 +20,22 @@ def local_0(args):
 
     (X, y) = fsl_parser(args)
 
+    missing_columns = y.columns[y.isna().any()].tolist()
+
+    output_dict = {
+        "missing_columns": missing_columns,
+        "computation_phase": "local_0"
+    }
+
+    cache_dict = {
+        "covariates": X.to_json(orient='split'),
+        "dependents": y.to_json(orient='split'),
+        "lambda": lamb,
+    }
+
     computation_output_dict = {
-        "output": {
-            "computation_phase": "local_0"
-        },
-        "cache": {
-            "covariates": X.to_json(orient='split'),
-            "dependents": y.to_json(orient='split'),
-            "lambda": lamb,
-        },
+        "output": output_dict,
+        "cache": cache_dict,
     }
 
     return json.dumps(computation_output_dict)
@@ -38,6 +45,9 @@ def local_1(args):
     X = pd.read_json(args["cache"]["covariates"], orient='split')
     y = pd.read_json(args["cache"]["dependents"], orient='split')
     lamb = args["cache"]["lambda"]
+
+    # Dropping missing columns
+    y = y.drop(args["input"]["missing_columns"], axis=1)
 
     y_labels = list(y.columns)
 
@@ -76,6 +86,7 @@ def local_1(args):
 
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
+        "dependents": y.to_json(orient='split'),
     }
     computation_output_dict = {
         "output": output_dict,
