@@ -4,12 +4,11 @@
 This script includes the remote computations for single-shot ridge
 regression with decentralized statistic calculation
 """
-import ujson as json
-import sys
-import scipy as sp
 import numpy as np
+import pandas as pd
 import regression as reg
-from itertools import repeat
+import sys
+import ujson as json
 from remote_ancillary import get_stats_to_dict
 
 
@@ -44,37 +43,39 @@ def remote_1(args):
         input_list[site]["local_stats_list"] for site in input_list
     ]
 
-    beta_vector_0 = [
+    XtransposeX_local = [
         np.array(input_list[site]["XtransposeX_local"]) for site in input_list
     ]
 
-    beta_vector_1 = sum(beta_vector_0)
+    XtransposeX = sum(XtransposeX_local)
 
     all_lambdas = [input_list[site]["lambda"] for site in input_list]
 
     if np.unique(all_lambdas).shape[0] != 1:
         raise Exception("Unequal lambdas at local sites")
 
-    beta_vector_1 = beta_vector_1 + np.unique(all_lambdas) * np.eye(
-        beta_vector_1.shape[0])
+    XtransposeX = XtransposeX + np.unique(all_lambdas) * np.eye(
+        XtransposeX.shape[0])
+    XtransposeX_inv = np.linalg.inv(XtransposeX)
 
-    avg_beta_vector = np.matrix.transpose(
-        sum([
-            np.matmul(
-                sp.linalg.inv(beta_vector_1), input_list[site][
-                    "Xtransposey_local"]) for site in input_list
-        ]))
+    Xtransposey_local = [
+        pd.read_json(input_list[site]["Xtransposey_local"], orient='split')
+        .values for site in input_list
+    ]
+
+    avg_beta_vector = sum(np.nan_to_num(XtransposeX_inv @ Xtransposey_local)).T
 
     mean_y_local = [input_list[site]["mean_y_local"] for site in input_list]
-    count_y_local = [
-        np.array(input_list[site]["count_local"]) for site in input_list
-    ]
-    mean_y_global = np.array(mean_y_local) * np.array(count_y_local)
-    mean_y_global = np.sum(
-        mean_y_global, axis=0) / np.sum(
-            count_y_local, axis=0)
+    count_y_local = [input_list[site]["count_local"] for site in input_list]
 
-    dof_global = sum(count_y_local) - avg_beta_vector.shape[1]
+    mean_y_global = np.ma.average(
+        np.ma.masked_array(mean_y_local, not np.nonzero(mean_y_local)),
+        weights=count_y_local,
+        axis=0).filled(0)
+
+    dof_global = np.subtract(
+        np.sum(count_y_local, axis=0),
+        [len(vec) if np.count_nonzero(vec) else 0 for vec in avg_beta_vector])
 
     output_dict = {
         "avg_beta_vector": avg_beta_vector.tolist(),
@@ -137,55 +138,69 @@ def remote_2(args):
 
     """
     input_list = args["input"]
-
-    X_labels = args["cache"]["X_labels"]
-    y_labels = args["cache"]["y_labels"]
-    all_local_stats_dicts = args["cache"]["local_stats_dict"]
-
     cache_list = args["cache"]
-    avg_beta_vector = cache_list["avg_beta_vector"]
+
+    X_labels = cache_list["X_labels"]
+    y_labels = cache_list["y_labels"]
     dof_global = cache_list["dof_global"]
+    avg_beta_vector = cache_list["avg_beta_vector"]
+    all_local_stats_dicts = cache_list["local_stats_dict"]
 
-    SSE_global = sum(
-        [np.array(input_list[site]["SSE_local"]) for site in input_list])
-    SST_global = sum(
-        [np.array(input_list[site]["SST_local"]) for site in input_list])
-    varX_matrix_global = sum([
-        np.array(input_list[site]["varX_matrix_local"]) for site in input_list
-    ])
+    SSE_local = [input_list[site]["SSE_local"] for site in input_list]
+    SSE_global = [
+        np.sum(list(filter(None, elem)), axis=0) for elem in zip(*SSE_local)
+    ]
 
-    r_squared_global = 1 - (SSE_global / SST_global)
-    MSE = SSE_global / np.array(dof_global)
+    SST_local = [input_list[site]["SST_local"] for site in input_list]
+    SST_global = [
+        np.sum(list(filter(None, elem)), axis=0) for elem in zip(*SST_local)
+    ]
+
+    varX_matrix_local = [
+        input_list[site]["varX_matrix_local"] for site in input_list
+    ]
+    varX_matrix_global = [
+        np.sum(list(filter(None, elem)), axis=0)
+        for elem in zip(*varX_matrix_local)
+    ]
+
+    r_squared_global = 1 - np.divide(SSE_global, SST_global)
+    MSE = np.divide(SSE_global, dof_global)
 
     ts_global = []
     ps_global = []
 
+    keys1 = [
+        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global",
+        "covariate_labels"
+    ]
+    global_dict_list = []
+
     for i in range(len(MSE)):
-        var_covar_beta_global = MSE[i] * sp.linalg.inv(varX_matrix_global[i])
-        se_beta_global = np.sqrt(var_covar_beta_global.diagonal())
-        ts = (avg_beta_vector[i] / se_beta_global).tolist()
-        ps = reg.t_to_p(ts, dof_global[i])
-        ts_global.append(ts)
-        ps_global.append(ps)
+        if not np.isnan(MSE[i]):
+            var_covar_beta_global = MSE[i] * np.linalg.inv(
+                varX_matrix_global[i])
+            se_beta_global = np.sqrt(var_covar_beta_global.diagonal())
+            ts = (avg_beta_vector[i] / se_beta_global).tolist()
+            ps = reg.t_to_p(ts, dof_global[i])
+            ts_global.append(ts)
+            ps_global.append(ps)
+
+            vals = [
+                avg_beta_vector[i], r_squared_global[i], ts, ps, dof_global[i],
+                X_labels
+            ]
+            global_dict_list.append(dict(zip(keys1, vals)))
+        else:
+            global_dict_list.append({})
 
     # Block of code to print local stats as well
     sites = [site for site in input_list]
-
     all_local_stats_dicts = list(map(list, zip(*all_local_stats_dicts)))
 
     a_dict = [{key: value
                for key, value in zip(sites, stats_dict)}
               for stats_dict in all_local_stats_dicts]
-
-    # Block of code to print just global stats
-    keys1 = [
-        "avg_beta_vector", "r2_global", "ts_global", "ps_global", "dof_global",
-        "covariate_labels"
-    ]
-    global_dict_list = get_stats_to_dict(keys1, avg_beta_vector,
-                                         r_squared_global, ts_global,
-                                         ps_global, dof_global,
-                                         repeat(X_labels, len(y_labels)))
 
     # Print Everything
     keys2 = ["ROI", "global_stats", "local_stats"]

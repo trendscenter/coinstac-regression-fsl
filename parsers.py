@@ -60,6 +60,10 @@ def fsl_parser(args):
 
     y_files = y_info[0]
     y_labels = y_info[2]
+    y_labels = ['4th-Ventricle']
+
+    if not y_labels:
+        y_labels = ['No Region Selected']
 
     y = parse_for_y(args, y_files, y_labels)
 
