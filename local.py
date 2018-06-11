@@ -145,6 +145,8 @@ def local_2(args):
             SST_local.append([])
             varX_matrix_local.append([])
 
+#    SST_local1 = np.nansum((y.values - mean_y_global)**2, axis=0)
+
     output_dict = {
         "SSE_local": SSE_local,
         "SST_local": SST_local,
