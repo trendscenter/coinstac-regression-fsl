@@ -120,7 +120,7 @@ def local_2(args):
         SST_local.append(
             np.sum(np.square(np.subtract(y_, mean_y_global[index]))))
 
-        varX_matrix_local.append(np.dot(biased_X.T, biased_X).tolist())
+        varX_matrix_local.append(np.dot(X_.T, X_).tolist())
 
     computation_output = {
         "output": {
