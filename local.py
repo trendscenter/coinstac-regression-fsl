@@ -20,7 +20,7 @@ def local_0(args):
 
     (X, y) = fsl_parser(args)
 
-    missing_columns = y.columns[y.isna().any()].tolist()
+    missing_columns = y.columns[y.isna().all()].tolist()
 
     output_dict = {
         "missing_columns": missing_columns,
@@ -60,34 +60,27 @@ def local_1(args):
 
     biased_X = augmented_X.values
 
-    XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
-    Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
+    XtransposeX_local = biased_X.T @ biased_X
+    Xtransposey_local = biased_X.T @ y
+    Xtransposey_local_df = pd.DataFrame(Xtransposey_local)
 
     output_dict = {
-        "XtransposeX_local":
-        XtransposeX_local.tolist(),
-        "Xtransposey_local":
-        pd.DataFrame(Xtransposey_local).to_json(orient='split'),
-        "mean_y_local":
-        meanY_vector,
-        "count_local":
-        lenY_vector,
-        "local_stats_list":
-        local_stats_list,
-        "X_labels":
-        X_labels,
-        "y_labels":
-        y_labels,
-        "lambda":
-        lamb,
-        "computation_phase":
-        "local_1",
+        "XtransposeX_local": XtransposeX_local.tolist(),
+        "Xtransposey_local": Xtransposey_local_df.to_json(orient='split'),
+        "mean_y_local": meanY_vector,
+        "count_local": lenY_vector,
+        "local_stats_list": local_stats_list,
+        "X_labels": X_labels,
+        "y_labels": y_labels,
+        "lambda": lamb,
+        "computation_phase": "local_1",
     }
 
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
         "dependents": y.to_json(orient='split'),
     }
+
     computation_output_dict = {
         "output": output_dict,
         "cache": cache_dict,
@@ -152,15 +145,14 @@ def local_2(args):
             SST_local.append([])
             varX_matrix_local.append([])
 
-    computation_output = {
-        "output": {
-            "SSE_local": SSE_local,
-            "SST_local": SST_local,
-            "varX_matrix_local": varX_matrix_local,
-            "computation_phase": 'local_2'
-        },
-        "cache": {}
+    output_dict = {
+        "SSE_local": SSE_local,
+        "SST_local": SST_local,
+        "varX_matrix_local": varX_matrix_local,
+        "computation_phase": 'local_2'
     }
+
+    computation_output = {"output": output_dict, "cache": {}}
 
     return json.dumps(computation_output)
 
