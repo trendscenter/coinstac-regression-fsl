@@ -28,9 +28,9 @@ def remote_0(args):
 
     cache_dict = {}
 
-    computation_output_dict = {"output": output_dict, "cache": cache_dict}
+    computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output_dict)
+    return json.dumps(computation_output)
 
 
 def remote_1(args):

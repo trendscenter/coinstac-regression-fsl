@@ -20,18 +20,17 @@ def local_0(args):
 
     (X, y) = fsl_parser(args)
 
-    computation_output_dict = {
-        "output": {
-            "computation_phase": "local_0"
-        },
-        "cache": {
-            "covariates": X.to_json(orient='split'),
-            "dependents": y.to_json(orient='split'),
-            "lambda": lamb,
-        },
+    output_dict = {"computation_phase": "local_0"}
+
+    cache_dict = {
+        "covariates": X.to_json(orient='split'),
+        "dependents": y.to_json(orient='split'),
+        "lambda": lamb,
     }
 
-    return json.dumps(computation_output_dict)
+    computation_output = {"output": output_dict, "cache": cache_dict}
+
+    return json.dumps(computation_output)
 
 
 def local_1(args):
@@ -41,7 +40,8 @@ def local_1(args):
 
     y_labels = list(y.columns)
 
-    _, local_stats_list, meanY_vector, lenY_vector = local_stats_to_dict_fsl(X, y)
+    t = local_stats_to_dict_fsl(X, y)
+    _, local_stats_list, meanY_vector, lenY_vector = t
 
     augmented_X = add_site_covariates(args, X)
 
@@ -52,24 +52,25 @@ def local_1(args):
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
 
-    computation_output_dict = {
-        "output": {
-            "XtransposeX_local": XtransposeX_local.tolist(),
-            "Xtransposey_local": Xtransposey_local.tolist(),
-            "mean_y_local": meanY_vector,
-            "count_local": lenY_vector,
-            "local_stats_list": local_stats_list,
-            "X_labels": X_labels,
-            "y_labels": y_labels,
-            "lambda": lamb,
-            "computation_phase": "local_1",
-        },
-        "cache": {
-            "covariates": augmented_X.to_json(orient='split'),
-        },
+    output_dict = {
+        "XtransposeX_local": XtransposeX_local.tolist(),
+        "Xtransposey_local": Xtransposey_local.tolist(),
+        "mean_y_local": meanY_vector,
+        "count_local": lenY_vector,
+        "local_stats_list": local_stats_list,
+        "X_labels": X_labels,
+        "y_labels": y_labels,
+        "lambda": lamb,
+        "computation_phase": "local_1",
     }
 
-    return json.dumps(computation_output_dict)
+    cache_dict = {
+        "covariates": augmented_X.to_json(orient='split'),
+    }
+
+    computation_output = {"output": output_dict, "cache": cache_dict}
+
+    return json.dumps(computation_output)
 
 
 def local_2(args):
@@ -122,15 +123,16 @@ def local_2(args):
 
         varX_matrix_local.append(np.dot(X_.T, X_).tolist())
 
-    computation_output = {
-        "output": {
-            "SSE_local": SSE_local,
-            "SST_local": SST_local,
-            "varX_matrix_local": varX_matrix_local,
-            "computation_phase": 'local_2'
-        },
-        "cache": {}
+    output_dict = {
+        "SSE_local": SSE_local,
+        "SST_local": SST_local,
+        "varX_matrix_local": varX_matrix_local,
+        "computation_phase": 'local_2'
     }
+
+    cache_dict = {}
+
+    computation_output = {"output": output_dict, "cache": cache_dict}
 
     return json.dumps(computation_output)
 
