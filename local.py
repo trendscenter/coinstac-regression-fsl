@@ -4,6 +4,8 @@
 This script includes the local computations for decentralized regression with
 normal equation including decentralized statistic calculation
 """
+import warnings
+warnings.simplefilter("ignore")
 import numpy as np
 import pandas as pd
 import regression as reg
