@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "decentralized regression normal equation demo",
-    "id": "drne_fsl",
+    "name": "Decentralized regression for FSL",
+    "id": "regression-fsl",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
-    "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac-regression-fsl",
+    "description": "Decentralized Regression (Normal Equation) on FreeSurfer Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "drne_fsl",
+    "dockerImage": "regression-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "drne_fsl",
+      "dockerImage": "regression-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"

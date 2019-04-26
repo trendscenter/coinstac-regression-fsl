@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script includes the remote computations for single-shot ridge
+This script includes the remote computations for decentralized
 regression with decentralized statistic calculation
 """
 import ujson as json
