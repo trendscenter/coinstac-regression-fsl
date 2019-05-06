@@ -5,15 +5,14 @@ Created on Wed Apr 11 22:28:11 2018
 
 @author: Harshvardhan
 """
+import warnings
+warnings.simplefilter("ignore")
+    
 import numpy as np
 import pandas as pd
 import scipy as sp
-import warnings
+import statsmodels.api as sm
 from numba import jit, prange
-
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import statsmodels.api as sm
 
 
 def mean_and_len_y(y):
@@ -88,7 +87,7 @@ def local_stats_to_dict_vbm(X, y):
 
 
 def ignore_nans(X, y):
-    # Removing rows containing NaN's in X and y
+    """Removing rows containing NaN's in X and y"""
 
     if type(X) is pd.DataFrame:
         X_ = X.values.astype('float64')
