@@ -4,16 +4,19 @@
 This script includes the local computations for decentralized regression 
 (normal equation) including decentralized statistic calculation
 """
+import sys
 import warnings
-warnings.simplefilter("ignore")
+
 import numpy as np
 import pandas as pd
-import regression as reg
-import sys
 import ujson as json
+
+import regression as reg
+from local_ancillary import (add_site_covariates, ignore_nans,
+                             local_stats_to_dict_fsl)
 from parsers import fsl_parser
-from local_ancillary import add_site_covariates
-from local_ancillary import local_stats_to_dict_fsl, ignore_nans
+
+warnings.simplefilter("ignore")
 
 
 def local_0(args):

@@ -4,9 +4,10 @@ This module contains functions to perform ridge regression and other relevant
 functions including calculation of the coefficient of determination R^2 and
 t-value
 """
+import warnings
+
 import numpy as np
 import scipy as sp
-import warnings
 from scipy import stats
 
 with warnings.catch_warnings():
@@ -38,18 +39,18 @@ def one_shot_regression(X, y, lamb):
         Utilizes sklearn.linear_model.Ridge to return a weight vector for the
         regression  model y = w*biased_X + epsilon
       """
-#    clf = sklearn.linear_model.Ridge(
-#        alpha=lamb,
-#        fit_intercept=True,
-#        normalize=False,
-#        copy_X=True,
-#        max_iter=None,
-#        tol=0.001,
-#        solver='auto',
-#        random_state=None)
-#
-#    result = clf.fit(X, y)
-#    beta_vector = np.insert(result.coef_, 0, result.intercept_)
+    #    clf = sklearn.linear_model.Ridge(
+    #        alpha=lamb,
+    #        fit_intercept=True,
+    #        normalize=False,
+    #        copy_X=True,
+    #        max_iter=None,
+    #        tol=0.001,
+    #        solver='auto',
+    #        random_state=None)
+    #
+    #    result = clf.fit(X, y)
+    #    beta_vector = np.insert(result.coef_, 0, result.intercept_)
     model = sm.OLS(y, X.astype(float)).fit_regularized(alpha=lamb, L1_wt=0)
 
     return model.params

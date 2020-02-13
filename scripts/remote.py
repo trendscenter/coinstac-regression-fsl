@@ -4,12 +4,14 @@
 This script includes the remote computations for decentralized
 regression with decentralized statistic calculation
 """
-import ujson as json
 import sys
-import scipy as sp
-import numpy as np
-import regression as reg
 from itertools import repeat
+
+import numpy as np
+import scipy as sp
+import ujson as json
+
+import regression as reg
 from remote_ancillary import get_stats_to_dict
 
 
@@ -60,9 +62,9 @@ def remote_1(args):
 
     avg_beta_vector = np.matrix.transpose(
         sum([
-            np.matmul(
-                sp.linalg.inv(beta_vector_1), input_list[site][
-                    "Xtransposey_local"]) for site in input_list
+            np.matmul(sp.linalg.inv(beta_vector_1),
+                      input_list[site]["Xtransposey_local"])
+            for site in input_list
         ]))
 
     mean_y_local = [input_list[site]["mean_y_local"] for site in input_list]
@@ -70,9 +72,8 @@ def remote_1(args):
         np.array(input_list[site]["count_local"]) for site in input_list
     ]
     mean_y_global = np.array(mean_y_local) * np.array(count_y_local)
-    mean_y_global = np.sum(
-        mean_y_global, axis=0) / np.sum(
-            count_y_local, axis=0)
+    mean_y_global = np.sum(mean_y_global, axis=0) / np.sum(count_y_local,
+                                                           axis=0)
 
     dof_global = sum(count_y_local) - avg_beta_vector.shape[1]
 

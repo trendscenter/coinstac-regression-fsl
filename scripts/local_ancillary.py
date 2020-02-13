@@ -6,13 +6,16 @@ Created on Wed Apr 11 22:28:11 2018
 @author: Harshvardhan
 """
 import warnings
-warnings.simplefilter("ignore")
-    
+
 import numpy as np
 import pandas as pd
 import scipy as sp
+
 import statsmodels.api as sm
 from numba import jit, prange
+
+warnings.simplefilter("ignore")
+
 
 
 def mean_and_len_y(y):
@@ -72,12 +75,10 @@ def local_stats_to_dict_vbm(X, y):
         "Coefficient", "Sum Square of Errors", "t Stat", "P-value", "R Squared"
     ]
 
-    values1 = pd.DataFrame(
-        list(
-            zip(params.T.tolist(),
-                sse.tolist(),
-                tvalues.T.tolist(), pvalues.T.tolist(), rsquared.tolist())),
-        columns=keys)
+    values1 = pd.DataFrame(list(
+        zip(params.T.tolist(), sse.tolist(), tvalues.T.tolist(),
+            pvalues.T.tolist(), rsquared.tolist())),
+                           columns=keys)
 
     local_stats_list = values1.to_dict(orient='records')
 
@@ -164,8 +165,8 @@ def add_site_covariates(args, X):
     biased_X = sm.add_constant(X)
     site_covar_list = args["input"]["site_covar_list"]
 
-    site_matrix = np.zeros(
-        (np.array(X).shape[0], len(site_covar_list)), dtype=int)
+    site_matrix = np.zeros((np.array(X).shape[0], len(site_covar_list)),
+                           dtype=int)
     site_df = pd.DataFrame(site_matrix, columns=site_covar_list)
 
     select_cols = [
