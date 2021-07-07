@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script includes the local computations for decentralized regression 
+This script includes the local computations for decentralized regression
 (normal equation) including decentralized statistic calculation
 """
 import sys
@@ -14,7 +14,8 @@ import ujson as json
 import regression as reg
 from local_ancillary import (add_site_covariates, ignore_nans,
                              local_stats_to_dict_fsl)
-from parsers import fsl_parser
+import fslparser
+from fslparser import parsers
 
 warnings.simplefilter("ignore")
 
@@ -23,7 +24,7 @@ def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y) = fsl_parser(args)
+    (X, y) = parsers.fsl_parser(args)
 
     output_dict = {"computation_phase": "local_0"}
 
