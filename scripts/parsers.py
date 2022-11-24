@@ -6,11 +6,13 @@ Created on Wed Mar 21 19:25:26 2018
 @author: Harshvardhan
 """
 import os
+import warnings
 
-import numpy as np
 import pandas as pd
 
-import nibabel as nib
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import statsmodels.api as sm
 
 
 def parse_for_y(args, y_files, y_labels):
@@ -20,19 +22,16 @@ def parse_for_y(args, y_files, y_labels):
     for file in y_files:
         if file:
             try:
-                y_ = pd.read_csv(os.path.join(args["state"]["baseDirectory"],
-                                              file),
-                                 sep='\t',
-                                 header=None,
-                                 names=['Measure:volume', file],
-                                 index_col=0)
+                y_ = pd.read_csv(
+                    os.path.join(args["state"]["baseDirectory"], file),
+                    sep="\t",
+                    header=None,
+                    names=["Measure:volume", file],
+                    index_col=0,
+                )
                 y_ = y_[~y_.index.str.contains("Measure:volume")]
-                y_ = y_.apply(pd.to_numeric, errors='ignore')
-                y = pd.merge(y,
-                             y_,
-                             how='left',
-                             left_index=True,
-                             right_index=True)
+                y_ = y_.apply(pd.to_numeric, errors="ignore")
+                y = pd.merge(y, y_, how="left", left_index=True, right_index=True)
             except pd.errors.EmptyDataError:
                 continue
             except FileNotFoundError:
@@ -46,36 +45,44 @@ def parse_for_y(args, y_files, y_labels):
 def fsl_parser(args):
     """Parse the freesurfer (fsl) specific inputspec.json and return the
     covariate matrix (X) as well the dependent matrix (y) as dataframes"""
-    input_list = args["input"]
-    X_info = input_list["covariates"]
-    y_info = input_list["data"]
+    input_ = args["input"]
+    state_ = args["state"]
+    X_info = input_["covariates"]
+    y_info = input_["data"]
 
-    X_data = X_info[0][0]
-    X_labels = X_info[1]
+    X = pd.DataFrame.from_dict(X_info, orient="index")
 
-    X_df = pd.DataFrame.from_records(X_data)
+    # convert bool to categorical as soon as possible
+    # for column in covar_info.select_dtypes(bool):
+    #     covar_info[column] = covar_info[column].astype("object")
 
-    X_df.columns = X_df.iloc[0]
-    X_df = X_df.reindex(X_df.index.drop(0))
-    X_df.set_index(X_df.columns[0], inplace=True)
+    # Checks for existence of files and if they don't delete row
+    for file in X.index:
+        if not os.path.isfile(os.path.join(state_["baseDirectory"], file)):
+            X.drop(file, inplace=True)
 
-    X = X_df[X_labels]
-    X = X.apply(pd.to_numeric, errors='ignore')
+    # Raise Exception if none of the files are found
+    if X.index.empty:
+        raise Exception("Could not find files specified in the covariates csv")
+
+    # convert contents of object columns to lowercase
+    for column in X.select_dtypes(object):
+        X[column] = X[column].astype("str").str.lower()
+
+    # this is sort of a hack for no site covariate
+    X = X.apply(pd.to_numeric, errors="ignore")
     X = pd.get_dummies(X, drop_first=True)
     X = X * 1
 
-    y_files = y_info[0]
-    y_labels = y_info[2]
+    y_files = X.index
+    y_labels = y_info[0]["value"]
 
     y = parse_for_y(args, y_files, y_labels)
-
-    X = X.reindex(sorted(X.columns), axis=1)
 
     ixs = X.index.intersection(y.index)
 
     if ixs.empty:
-        raise Exception('No common X and y files at ' +
-                        args["state"]["clientId"])
+        raise Exception("No common X and y files at " + args["state"]["clientId"])
     else:
         X = X.loc[ixs]
         y = y.loc[ixs]
@@ -83,61 +90,61 @@ def fsl_parser(args):
     return (X, y)
 
 
-def nifti_to_data(args, X):
-    """Read nifti files as matrices"""
-    try:
-        mask_file = os.path.join(args["state"]["baseDirectory"],
-                                 'mask_6mm.nii')
-        mask_data = nib.load(mask_file).get_data()
-    except FileNotFoundError:
-        raise Exception("Missing Mask at " + args["state"]["clientId"])
+def parse_covar_info(args):
+    """Read covariate information from the UI"""
+    input_ = args["input"]
+    state_ = args["state"]
+    covar_info = input_["covariates"]
 
-    appended_data = []
+    covar_info = pd.DataFrame.from_dict(covar_info, orient="index")
 
-    # Extract Data (after applying mask)
-    for image in X.index:
-        try:
-            image_data = nib.load(
-                os.path.join(args["state"]["baseDirectory"],
-                             image)).get_data()
-            if np.all(np.isnan(image_data)) or np.count_nonzero(
-                    image_data) == 0 or image_data.size == 0:
-                X.drop(index=image, inplace=True)
-                continue
-            else:
-                appended_data.append(image_data[mask_data > 0])
-        except FileNotFoundError:
-            X.drop(index=image, inplace=True)
-            continue
+    # convert bool to categorical as soon as possible
+    for column in covar_info.select_dtypes(bool):
+        covar_info[column] = covar_info[column].astype("object")
 
-    y = pd.DataFrame.from_records(appended_data)
+    # Checks for existence of files and if they don't delete row
+    for file in covar_info.index:
+        if not os.path.isfile(os.path.join(state_["baseDirectory"], file)):
+            covar_info.drop(file, inplace=True)
 
-    return X, y
+    # Raise Exception if none of the files are found
+    if covar_info.index.empty:
+        raise Exception("Could not find .nii files specified in the covariates csv")
+
+    # convert contents of object columns to lowercase
+    for column in covar_info.select_dtypes(object):
+        covar_info[column] = covar_info[column].astype("str").str.lower()
+
+    return covar_info
 
 
-def vbm_parser(args):
-    """Parse the nifti (.nii) specific inputspec.json and return the
-    covariate matrix (X) as well the dependent matrix (y) as dataframes"""
-    input_list = args["input"]
-    X_info = input_list["covariates"]
+def parse_for_categorical(args):
+    """Return unique subsites as a dictionary"""
+    X = parse_covar_info(args)
 
-    X_data = X_info[0][0]
-    X_labels = X_info[1]
+    site_dict1 = {col: list(X[col].unique()) for col in X.select_dtypes(include=object)}
 
-    X_df = pd.DataFrame.from_records(X_data)
-    X_df.columns = X_df.iloc[0]
-    X_df = X_df.reindex(X_df.index.drop(0))
-    X_df.set_index(X_df.columns[0], inplace=True)
+    return site_dict1
 
-    X = X_df[X_labels]
-    X = X.apply(pd.to_numeric, errors='ignore')
-    X = pd.get_dummies(X, drop_first=True)
-    X = X * 1
 
-    X.dropna(axis=0, how='any', inplace=True)
+def create_dummies(data_f, cols, drop_flag=True):
+    """Create dummy columns"""
+    return pd.get_dummies(data_f, columns=cols, drop_first=drop_flag)
 
-    X, y = nifti_to_data(args, X)
 
-    y.columns = ['{}_{}'.format('voxel', str(i)) for i in y.columns]
+def perform_encoding(args, data_f, exclude_cols=(" ")):
+    """Perform encoding of various categorical variables"""
+    cols_categorical = [col for col in data_f if data_f[col].dtype == object]
+    cols_mono = [col for col in data_f if data_f[col].nunique() == 1]
 
-    return (X, y)
+    # Dropping columsn with unique values
+    data_f = data_f.drop(columns=cols_mono)
+
+    # Creating dummies on non-unique categorical variables
+    cols_nodrop = set(cols_categorical) - set(cols_mono)
+    data_f = create_dummies(data_f, cols_nodrop, True)
+
+    data_f = data_f.dropna(axis=0, how="any")
+    data_f = sm.add_constant(data_f, has_constant="add")
+
+    return data_f

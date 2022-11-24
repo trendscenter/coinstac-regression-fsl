@@ -32,7 +32,7 @@ def remote_0(args):
 
     computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
 def remote_1(args):
@@ -94,7 +94,7 @@ def remote_1(args):
 
     computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
 def remote_2(args):
@@ -196,22 +196,17 @@ def remote_2(args):
 
     computation_output = {"output": output_dict, "success": True}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
-if __name__ == '__main__':
+def start(PARAM_DICT):
+    PHASE_KEY = list(reg.list_recursive(PARAM_DICT, "computation_phase"))
 
-    parsed_args = json.loads(sys.stdin.read())
-    phase_key = list(reg.list_recursive(parsed_args, 'computation_phase'))
-
-    if "local_0" in phase_key:
-        computation_output = remote_0(parsed_args)
-        sys.stdout.write(computation_output)
-    elif "local_1" in phase_key:
-        computation_output = remote_1(parsed_args)
-        sys.stdout.write(computation_output)
-    elif "local_2" in phase_key:
-        computation_output = remote_2(parsed_args)
-        sys.stdout.write(computation_output)
+    if "local_0" in PHASE_KEY:
+        return remote_0(PARAM_DICT)
+    elif "local_1" in PHASE_KEY:
+        return remote_1(PARAM_DICT)
+    elif "local_2" in PHASE_KEY:
+        return remote_2(PARAM_DICT)
     else:
         raise ValueError("Error occurred at Remote")
