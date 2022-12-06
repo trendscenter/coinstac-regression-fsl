@@ -14,8 +14,8 @@ import ujson as json
 import regression as reg
 from local_ancillary import (add_site_covariates, ignore_nans,
                              local_stats_to_dict_fsl)
-import fslparser
-from fslparser import parsers
+import parsers
+import regression as reg
 
 warnings.simplefilter("ignore")
 
@@ -36,7 +36,7 @@ def local_0(args):
 
     computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
 def local_1(args):
@@ -54,6 +54,7 @@ def local_1(args):
     X_labels = list(augmented_X.columns)
 
     biased_X = augmented_X.values
+    y = y.values # another hack
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
@@ -76,7 +77,7 @@ def local_1(args):
 
     computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
 def local_2(args):
@@ -140,22 +141,17 @@ def local_2(args):
 
     computation_output = {"output": output_dict, "cache": cache_dict}
 
-    return json.dumps(computation_output)
+    return computation_output
 
 
-if __name__ == '__main__':
+def start(PARAM_DICT):
+    PHASE_KEY = list(reg.list_recursive(PARAM_DICT, "computation_phase"))
 
-    parsed_args = json.loads(sys.stdin.read())
-    phase_key = list(reg.list_recursive(parsed_args, 'computation_phase'))
-
-    if not phase_key:
-        computation_output = local_0(parsed_args)
-        sys.stdout.write(computation_output)
-    elif "remote_0" in phase_key:
-        computation_output = local_1(parsed_args)
-        sys.stdout.write(computation_output)
-    elif "remote_1" in phase_key:
-        computation_output = local_2(parsed_args)
-        sys.stdout.write(computation_output)
+    if not PHASE_KEY:
+        return local_0(PARAM_DICT)
+    elif "remote_0" in PHASE_KEY:
+        return local_1(PARAM_DICT)
+    elif "remote_1" in PHASE_KEY:
+        return local_2(PARAM_DICT)
     else:
         raise ValueError("Error occurred at Local")
