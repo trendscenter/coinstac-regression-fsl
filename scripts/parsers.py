@@ -50,11 +50,12 @@ def fsl_parser(args):
     X_info = input_["covariates"]
     y_info = input_["data"]
 
+
     X = pd.DataFrame.from_dict(X_info, orient="index")
 
     # convert bool to categorical as soon as possible
-    # for column in covar_info.select_dtypes(bool):
-    #     covar_info[column] = covar_info[column].astype("object")
+    for column in X.select_dtypes(bool):
+        X[column] = X[column].astype("object")
 
     # Checks for existence of files and if they don't delete row
     for file in X.index:
@@ -70,9 +71,9 @@ def fsl_parser(args):
         X[column] = X[column].astype("str").str.lower()
 
     # this is sort of a hack for no site covariate
-    X = X.apply(pd.to_numeric, errors="ignore")
-    X = pd.get_dummies(X, drop_first=True)
-    X = X * 1
+    # X = X.apply(pd.to_numeric, errors="ignore")
+    # X = pd.get_dummies(X, drop_first=True)
+    # X = X * 1
 
     y_files = X.index
     y_labels = y_info[0]["value"]
@@ -89,7 +90,7 @@ def fsl_parser(args):
 
     return (X, y)
 
-
+#TODO create a common nethod of matching lines in this code and fsl_parser()
 def parse_covar_info(args):
     """Read covariate information from the UI"""
     input_ = args["input"]
@@ -131,20 +132,44 @@ def create_dummies(data_f, cols, drop_flag=True):
     """Create dummy columns"""
     return pd.get_dummies(data_f, columns=cols, drop_first=drop_flag)
 
+def adjust_dummy_encoding_columns(df, ref_col_val_dict, data_def_col_val_dict):
+    """ If a column is listed in reference_columns in the input for dummy encoding,
+     then the values in this dict is used the reference column from the dataframe,
+     otherwise the default sorted first value is used for a column."""
+
+    for col_name in data_def_col_val_dict.keys():
+        ref_col_val =col_name +"_"+ ref_col_val_dict.get(col_name, data_def_col_val_dict[col_name])
+        df.drop(ref_col_val, inplace=True, axis=1)
+
+    return df
 
 def perform_encoding(args, data_f, exclude_cols=(" ")):
     """Perform encoding of various categorical variables"""
     cols_categorical = [col for col in data_f if data_f[col].dtype == object]
     cols_mono = [col for col in data_f if data_f[col].nunique() == 1]
 
-    # Dropping columsn with unique values
+    # Dropping columns with unique values
     data_f = data_f.drop(columns=cols_mono)
 
     # Creating dummies on non-unique categorical variables
-    cols_nodrop = set(cols_categorical) - set(cols_mono)
-    data_f = create_dummies(data_f, cols_nodrop, True)
+    cols_nodrop = [x for x in cols_categorical if x not in cols_mono]
+    default_col_sortedval_dict = get_default_dummy_encoding_columns(data_f)
+    data_f = create_dummies(data_f, cols_nodrop, False)
+    data_f = adjust_dummy_encoding_columns( data_f, args["input"]["reference_columns"],
+                                           default_col_sortedval_dict)
 
     data_f = data_f.dropna(axis=0, how="any")
     data_f = sm.add_constant(data_f, has_constant="add")
 
     return data_f
+
+
+def get_default_dummy_encoding_columns(df):
+    """Returns a dictionary of the first sorted unique-value of all categorical variables."""
+
+    default_col_sortedval_dict={}
+    categorical_cols=df.select_dtypes(include=['object']).columns.tolist()
+    for col_name in categorical_cols:
+        default_col_sortedval_dict[col_name]=sorted(df[col_name].unique())[0]
+
+    return default_col_sortedval_dict

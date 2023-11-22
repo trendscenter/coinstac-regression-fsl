@@ -24,9 +24,15 @@ def local_0(args):
     input_list = args["input"]
     lamb = input_list["lambda"]
 
-    (X, y) = parsers.fsl_parser(args)
 
-    output_dict = {"computation_phase": "local_0"}
+    categorical_dict = parsers.parse_for_categorical(args)
+    
+    (X, y) = parsers.fsl_parser(args)
+    reference_dict = {}
+    if "reference_columns" in input_list:
+        reference_dict = dict((k, v.lower()) for k,v in input_list["reference_columns"].items());
+
+    output_dict = {"computation_phase": "local_0", "categorical_dict": categorical_dict, "reference_columns": reference_dict}
 
     cache_dict = {
         "covariates": X.to_json(orient='split'),
@@ -42,19 +48,32 @@ def local_0(args):
 def local_1(args):
     X = pd.read_json(args["cache"]["covariates"], orient='split')
     y = pd.read_json(args["cache"]["dependents"], orient='split')
+
+    dependents=y
+
     lamb = args["cache"]["lambda"]
 
     y_labels = list(y.columns)
 
-    t = local_stats_to_dict_fsl(X, y)
+
+    #ADDED : PERFORMED DUMMY ENCODING WITH REFERENCE COLUMN VALUES
+    encoded_X = parsers.perform_encoding(args, X)
+
+    t = local_stats_to_dict_fsl(encoded_X, y)
     _, local_stats_list, meanY_vector, lenY_vector = t
 
+
+    #ADDED: Edited add_site_covariates with dummy encoding as in VBM regression code
     augmented_X = add_site_covariates(args, X)
 
     X_labels = list(augmented_X.columns)
 
-    biased_X = augmented_X.values
+    #ADDED: added the .astype("float64")
+    biased_X = augmented_X.values.astype("float64")
+
+
     y = y.values # another hack
+
 
     XtransposeX_local = np.matmul(np.matrix.transpose(biased_X), biased_X)
     Xtransposey_local = np.matmul(np.matrix.transpose(biased_X), y)
@@ -71,8 +90,10 @@ def local_1(args):
         "computation_phase": "local_1",
     }
 
+
     cache_dict = {
         "covariates": augmented_X.to_json(orient='split'),
+        "dependents": dependents.to_json(orient='split')
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
@@ -111,24 +132,33 @@ def local_2(args):
     input_list = args["input"]
 
     X = pd.read_json(cache_list["covariates"], orient='split')
+
     y = pd.read_json(cache_list["dependents"], orient='split')
+
+    #ADDED: this code to drop nan's from the covaraites and dependents
+    X=X.dropna()
+    y=y.dropna()
+
     biased_X = np.array(X)
 
     avg_beta_vector = input_list["avg_beta_vector"]
     mean_y_global = input_list["mean_y_global"]
 
     SSE_local, SST_local, varX_matrix_local = [], [], []
+
     for index, column in enumerate(y.columns):
         curr_y = y[column]
-
+        '''
+        Removed this code: The following code does not take objects datatype. 
+        Removed this code as we dropna() in the above anyways
         X_, y_ = ignore_nans(biased_X, curr_y)
-
+        '''
         SSE_local.append(
-            reg.sum_squared_error(X_, y_, np.array(avg_beta_vector[index])))
+            reg.sum_squared_error(biased_X, curr_y, np.array(avg_beta_vector[index])))
         SST_local.append(
-            np.sum(np.square(np.subtract(y_, mean_y_global[index]))))
+            np.sum(np.square(np.subtract(curr_y, mean_y_global[index]))))
 
-        varX_matrix_local.append(np.dot(X_.T, X_).tolist())
+        varX_matrix_local.append(np.dot(biased_X.T, biased_X).tolist())
 
     output_dict = {
         "SSE_local": SSE_local,

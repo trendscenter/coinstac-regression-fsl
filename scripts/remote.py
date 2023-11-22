@@ -10,21 +10,33 @@ from itertools import repeat
 import numpy as np
 import scipy as sp
 import ujson as json
+import pandas as pd
 
 import regression as reg
-from remote_ancillary import get_stats_to_dict
+from remote_ancillary import *
+import jsonpickle
 
 
 def remote_0(args):
     input_list = args["input"]
+
     site_ids = list(input_list.keys())
     site_covar_list = [
         '{}_{}'.format('site', label) for index, label in enumerate(site_ids)
         if index
     ]
+    site_info = {site: input_list[site]["categorical_dict"] for site in input_list.keys()}
+    df = pd.DataFrame.from_dict(site_info)
+    covar_keys, unique_count = return_uniques_and_counts(df)
+
+    ref_cols = {site: input_list[site]["reference_columns"] for site in input_list.keys()}
+    reference_dict = next(iter(ref_cols.values()))
 
     output_dict = {
         "site_covar_list": site_covar_list,
+        "covar_keys": jsonpickle.encode(covar_keys, unpicklable=False),
+        "global_unique_count": unique_count,
+        "reference_columns": reference_dict,
         "computation_phase": "remote_0"
     }
 
@@ -162,6 +174,7 @@ def remote_2(args):
     ps_global = []
 
     for i in range(len(MSE)):
+
         var_covar_beta_global = MSE[i] * sp.linalg.inv(varX_matrix_global[i])
         se_beta_global = np.sqrt(var_covar_beta_global.diagonal())
         ts = (avg_beta_vector[i] / se_beta_global).tolist()

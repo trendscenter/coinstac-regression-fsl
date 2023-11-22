@@ -20,4 +20,5 @@ six
 statsmodels
 threadpoolctl
 ujson
-coinstac==0.3.3b0
+coinstac
+jsonpickle

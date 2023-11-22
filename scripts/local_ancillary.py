@@ -6,6 +6,7 @@ Created on Wed Apr 11 22:28:11 2018
 @author: Harshvardhan
 """
 import warnings
+import json
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ import scipy as sp
 
 import statsmodels.api as sm
 from numba import jit, prange
+from parsers import *
 
 warnings.simplefilter("ignore")
 
@@ -125,6 +127,10 @@ def local_stats_to_dict_fsl(X, y):
     local_rsquared = []
     meanY_vector, lenY_vector = [], []
 
+    biased_X = biased_X.apply(pd.to_numeric, errors="ignore")
+    biased_X = pd.get_dummies(biased_X, drop_first=True)
+    biased_X = biased_X * 1
+
     for column in y.columns:
         curr_y = y[column]
 
@@ -160,7 +166,7 @@ def local_stats_to_dict_fsl(X, y):
     return beta_vector, local_stats_list, meanY_vector, lenY_vector
 
 
-def add_site_covariates(args, X):
+def add_site_covariates_old(args, X):
     """Add site specific columns to the covariate matrix"""
     biased_X = sm.add_constant(X)
     site_covar_list = args["input"]["site_covar_list"]
@@ -182,3 +188,43 @@ def add_site_covariates(args, X):
     augmented_X = pd.concat([biased_X, site_df], axis=1)
 
     return augmented_X
+
+#ADDED This function is as in VBM regression
+def add_site_covariates(args, X):
+    """Add site covariates based on information gathered from all sites"""
+    input_ = args["input"]
+    all_sites = input_["covar_keys"]
+    glob_uniq_ct = input_["global_unique_count"]
+    
+    reference_col_dict= input_["reference_columns"]
+
+    all_sites = json.loads(all_sites)
+
+    default_col_sortedval_dict = get_default_dummy_encoding_columns(X)
+
+    for key, val in glob_uniq_ct.items():
+        if val == 1:
+            X.drop(columns=key, inplace=True)
+            default_col_sortedval_dict.pop(key)
+        else:
+            default_col_sortedval_dict[key] = sorted(all_sites[key])[0]
+            covar_dict = pd.get_dummies(all_sites[key], prefix=key, drop_first=False)
+            X = merging_globals(args, X, covar_dict, all_sites, key)
+
+    X = adjust_dummy_encoding_columns(X, reference_col_dict, default_col_sortedval_dict)
+
+    X = X.dropna(axis=0, how="any")
+    biased_X = sm.add_constant(X, has_constant="add")
+
+    return biased_X
+
+
+def merging_globals(args, X, site_covar_dict, dict_, key):
+    """Merge the actual data frame with the created dummy matrix"""
+    site_covar_dict.rename(index=dict(enumerate(dict_[key])), inplace=True)
+    site_covar_dict.index.name = key
+    site_covar_dict.reset_index(level=0, inplace=True)
+    X = X.merge(site_covar_dict, on=key, how="left")
+    X = X.drop(columns=key)
+
+    return X
