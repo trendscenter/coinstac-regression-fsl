@@ -9,18 +9,18 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import ujson as json
-
-import regression as reg
 from local_ancillary import (add_site_covariates, ignore_nans,
                              local_stats_to_dict_fsl)
 import parsers
 import regression as reg
+import utils as ut
 
 warnings.simplefilter("ignore")
 
 
 def local_0(args):
+    ut.log(f'\n\nlocal_0() method input: {str(args["input"])} ', args["state"])
+
     input_list = args["input"]
     lamb = input_list["lambda"]
 
@@ -41,11 +41,14 @@ def local_0(args):
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
+    ut.log(f'\nlocal_0() method output: {str(computation_output)} ', args["state"])
 
     return computation_output
 
 
 def local_1(args):
+    ut.log(f'\nlocal_1() method input: {str(args["input"])} ', args["state"])
+
     X = pd.read_json(args["cache"]["covariates"], orient='split')
     y = pd.read_json(args["cache"]["dependents"], orient='split')
 
@@ -55,9 +58,12 @@ def local_1(args):
 
     y_labels = list(y.columns)
 
-
     #ADDED : PERFORMED DUMMY ENCODING WITH REFERENCE COLUMN VALUES
     encoded_X = parsers.perform_encoding(args, X)
+
+    ut.log(f'\ncalling local_stats_to_dict_fsl() with X: {str(np.shape(encoded_X))} with columns:'
+           f' {str(encoded_X.columns.to_list())}', args["state"])
+    ut.log(f'\ncalling local_stats_to_dict_fsl() with Y: {str(np.shape(y))}', args["state"])
 
     t = local_stats_to_dict_fsl(encoded_X, y)
     _, local_stats_list, meanY_vector, lenY_vector = t
@@ -97,6 +103,7 @@ def local_1(args):
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
+    ut.log(f'\nlocal_1() method output: {str(computation_output)} ', args["state"])
 
     return computation_output
 
@@ -128,6 +135,8 @@ def local_2(args):
         After receiving  the mean_y_global, calculate the SSE_local,
         SST_local and varX_matrix_local
     """
+    ut.log(f'\nlocal_2() method input: {str(args["input"])} ', args["state"])
+
     cache_list = args["cache"]
     input_list = args["input"]
 
@@ -170,6 +179,8 @@ def local_2(args):
     cache_dict = {}
 
     computation_output = {"output": output_dict, "cache": cache_dict}
+    ut.log(f'\nlocal_2() method output: {str(computation_output)} ', args["state"])
+
 
     return computation_output
 

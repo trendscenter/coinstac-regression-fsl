@@ -15,10 +15,12 @@ import pandas as pd
 import regression as reg
 from remote_ancillary import *
 import jsonpickle
+import utils as ut
 
 
 def remote_0(args):
     input_list = args["input"]
+    ut.log(f'\nremote_0() method input: {str(args["input"])} ', args["state"])
 
     site_ids = list(input_list.keys())
     site_covar_list = [
@@ -43,12 +45,16 @@ def remote_0(args):
     cache_dict = {}
 
     computation_output = {"output": output_dict, "cache": cache_dict}
+    ut.log(f'\nremote_0() method output: {str(computation_output)} ', args["state"])
+
 
     return computation_output
 
 
 def remote_1(args):
     input_list = args["input"]
+    ut.log(f'\nremote_1() method input: {str(args["input"])} ', args["state"])
+
     userID = list(input_list)[0]
 
     X_labels = input_list[userID]["X_labels"]
@@ -105,6 +111,7 @@ def remote_1(args):
     }
 
     computation_output = {"output": output_dict, "cache": cache_dict}
+    ut.log(f'\nremote_1() method output: {str(computation_output)} ', args["state"])
 
     return computation_output
 
@@ -149,6 +156,8 @@ def remote_2(args):
                   the variable had no effect.)
 
     """
+    ut.log(f'\nremote_2() method input: {str(args["input"])} ', args["state"])
+
     input_list = args["input"]
 
     X_labels = args["cache"]["X_labels"]
@@ -208,6 +217,8 @@ def remote_2(args):
     output_dict = {"regressions": dict_list}
 
     computation_output = {"output": output_dict, "success": True}
+    ut.log(f'\nremote_2() method output: {str(computation_output)} ', args["state"])
+
 
     return computation_output
 
@@ -223,3 +234,4 @@ def start(PARAM_DICT):
         return remote_2(PARAM_DICT)
     else:
         raise ValueError("Error occurred at Remote")
+
