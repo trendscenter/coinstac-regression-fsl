@@ -6,9 +6,10 @@ This script includes the local computations for decentralized regression
 """
 import sys
 import warnings
-
+import json
 import numpy as np
 import pandas as pd
+from ancillary import DummyEncodingReferenceOrder
 from local_ancillary import (add_site_covariates, ignore_nans,
                              local_stats_to_dict_fsl)
 import parsers
@@ -19,20 +20,42 @@ warnings.simplefilter("ignore")
 
 
 def local_0(args):
-    ut.log(f'\n\nlocal_0() method input: {str(args["input"])} ', args["state"])
 
+    ut.log(f'\n\nlocal_0() method input: {str(args)} ', args["state"])
     input_list = args["input"]
     lamb = input_list["lambda"]
 
 
     categorical_dict = parsers.parse_for_categorical(args)
-    
+
     (X, y) = parsers.fsl_parser(args)
+    categorical_column_frequency_dict = {}
+    for column in categorical_dict.keys():
+        temp_dict=dict(X[column].value_counts())
+        categorical_column_frequency_dict[column] = {k: int(v) for k, v in temp_dict.items()}
+    #Check referencing to be used for dummy encoding
+    encoding_type = DummyEncodingReferenceOrder.from_str(input_list["dummy_encoding_reference_order"])
+
+    ut.log(f'\nUsing dummy encoding reference order: {str(encoding_type.value)} ', args["state"])
+
     reference_dict = {}
     if "reference_columns" in input_list:
         reference_dict = dict((k, v.lower()) for k,v in input_list["reference_columns"].items());
 
-    output_dict = {"computation_phase": "local_0", "categorical_dict": categorical_dict, "reference_columns": reference_dict}
+    if encoding_type == DummyEncodingReferenceOrder.CUSTOM:
+        assert bool(reference_dict), '"reference_columns" must be provided when you choose "custom" dummy encoding preference'
+    else:
+        assert not bool(reference_dict), (f'"reference_columns" must NOT be provided when you choose "{encoding_type.value}" '
+                                      f'as the dummy encoding preference')
+
+    #
+    #
+
+    output_dict = {"computation_phase": "local_0",
+                   "categorical_column_frequency_dict": categorical_column_frequency_dict,
+                   "categorical_dict": categorical_dict,
+                   "dummy_encoding_reference_order": encoding_type.value,
+                   "reference_columns": reference_dict}
 
     cache_dict = {
         "covariates": X.to_json(orient='split'),
@@ -43,7 +66,7 @@ def local_0(args):
     computation_output = {"output": output_dict, "cache": cache_dict}
     ut.log(f'\nlocal_0() method output: {str(computation_output)} ', args["state"])
 
-    return computation_output
+    return  computation_output
 
 
 def local_1(args):
@@ -105,7 +128,7 @@ def local_1(args):
     computation_output = {"output": output_dict, "cache": cache_dict}
     ut.log(f'\nlocal_1() method output: {str(computation_output)} ', args["state"])
 
-    return computation_output
+    return  computation_output
 
 
 def local_2(args):
@@ -182,7 +205,7 @@ def local_2(args):
     ut.log(f'\nlocal_2() method output: {str(computation_output)} ', args["state"])
 
 
-    return computation_output
+    return  computation_output
 
 
 def start(PARAM_DICT):
