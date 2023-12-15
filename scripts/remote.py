@@ -32,7 +32,6 @@ def remote_0(args):
     covar_keys, unique_count = return_uniques_and_counts(df)
 
     reference_dict =  get_dummy_encoding_reference_dict(covar_keys, input_list)
-    #reference_dict = {} #TODO delete this
 
     output_dict = {
         "site_covar_list": site_covar_list,
@@ -48,7 +47,7 @@ def remote_0(args):
     ut.log(f'\nremote_0() method output: {str(computation_output)} ', args["state"])
 
 
-    return  json.dumps(computation_output)
+    return computation_output
 
 
 def remote_1(args):
@@ -113,7 +112,7 @@ def remote_1(args):
     computation_output = {"output": output_dict, "cache": cache_dict}
     ut.log(f'\nremote_1() method output: {str(computation_output)} ', args["state"])
 
-    return  json.dumps(computation_output)
+    return computation_output
 
 
 def remote_2(args):
@@ -220,7 +219,7 @@ def remote_2(args):
     ut.log(f'\nremote_2() method output: {str(computation_output)} ', args["state"])
 
 
-    return  json.dumps(computation_output)
+    return computation_output
 
 
 def start(PARAM_DICT):
