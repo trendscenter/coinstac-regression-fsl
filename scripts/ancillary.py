@@ -18,6 +18,33 @@ np.seterr(divide='ignore')
 
 MASK = os.path.join('/computation', 'mask_4mm.nii')
 
+from enum import Enum, unique
+@unique
+class DummyEncodingReferenceOrder(Enum):
+    SORTED_FIRST = "sorted_first"
+    SORTED_LAST = "sorted_last"
+    MOST_FREQUENT = "most_frequent"
+    LEAST_FREQUENT = "least_frequent"
+    CUSTOM = "custom"
+    @staticmethod
+    def from_str(label):
+        #If label is not defined or is None, then the default dummy encoding behavior will be enforced.
+        if not label:
+            return DummyEncodingReferenceOrder.SORTED_FIRST.value
+        elif label.lower() in ('sorted_first'):
+            return DummyEncodingReferenceOrder.SORTED_FIRST
+        elif label.lower() in ('sorted_last'):
+            return DummyEncodingReferenceOrder.SORTED_LAST
+        elif label.lower() in ('most_frequent'):
+            return DummyEncodingReferenceOrder.MOST_FREQUENT
+        elif label.lower() in ('least_frequent'):
+            return DummyEncodingReferenceOrder.LEAST_FREQUENT
+        elif label.lower() in ('custom'):
+            return DummyEncodingReferenceOrder.CUSTOM
+        else:
+            raise Exception(f'Invalid value provided for "dummy_encoding_reference_order". Please choose one of the '
+                            f'following: {str([e.value for e in DummyEncodingReferenceOrder])}')
+
 
 def encode_png(args):
     # Begin code to serialize png images

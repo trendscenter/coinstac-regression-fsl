@@ -11,7 +11,7 @@ import numpy as np
 import scipy as sp
 import ujson as json
 import pandas as pd
-
+import json
 import regression as reg
 from remote_ancillary import *
 import jsonpickle
@@ -31,8 +31,7 @@ def remote_0(args):
     df = pd.DataFrame.from_dict(site_info)
     covar_keys, unique_count = return_uniques_and_counts(df)
 
-    ref_cols = {site: input_list[site]["reference_columns"] for site in input_list.keys()}
-    reference_dict = next(iter(ref_cols.values()))
+    reference_dict =  get_dummy_encoding_reference_dict(covar_keys, input_list)
 
     output_dict = {
         "site_covar_list": site_covar_list,

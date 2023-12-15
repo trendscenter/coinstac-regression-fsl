@@ -383,6 +383,12 @@
 		"lambda": {
 			"fulfilled": true,
 			"value": 1
+		},
+		"dummy_encoding_reference_order": {
+			"value": "most_frequent"
+		},
+		"reference_columns": {
+			"value": { }
 		}
 	},
 	{
@@ -654,6 +660,12 @@
 		"lambda": {
 			"fulfilled": true,
 			"value": 1
+		},
+		"dummy_encoding_reference_order": {
+			"value": "most_frequent"
+		},
+		"reference_columns": {
+			"value": { }
 		}
 	},
 	{
@@ -1175,6 +1187,12 @@
 		"lambda": {
 			"fulfilled": true,
 			"value": 1
+		},
+		"dummy_encoding_reference_order": {
+			"value": "most_frequent"
+		},
+		"reference_columns": {
+			"value": { }
 		}
 	},
 	{
@@ -1596,6 +1614,12 @@
 		"lambda": {
 			"fulfilled": true,
 			"value": 1
+		},
+		"dummy_encoding_reference_order": {
+			"value": "most_frequent"
+		},
+		"reference_columns": {
+			"value": { }
 		}
 	},
 	{
@@ -2217,6 +2241,12 @@
 		"lambda": {
 			"fulfilled": true,
 			"value": 1
+		},
+		"dummy_encoding_reference_order": {
+			"value": "most_frequent"
+		},
+		"reference_columns": {
+			"value": { }
 		}
 	}
 ]
