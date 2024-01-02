@@ -43,10 +43,9 @@
           "variable":"dummy_encoding_reference_order",
           "value": "custom"
         },
-        "default": { "reference_column_name": "reference_value" },
         "type": "object",
         "source": "owner",
-        "tooltip": "Provided column name, value pairs (atleast one) will be used as reference for dummy encoding. Any categorical columns that are missing will use the default sorted order. "
+        "tooltip": "Provided column name, value pairs (atleast one) will be used as reference for dummy encoding. Any categorical columns that are missing will use the default sorted order. For example: { \"reference_column_name\": \"reference_value\" }"
 
       },
       "lambda": {
