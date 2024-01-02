@@ -28,7 +28,7 @@ def get_dummy_encoding_reference_dict(covar_keys, input_args):
     from collections import Counter
 
     reference_dict = None
-    encoding_type = DummyEncodingReferenceOrder.from_str(input_args["local0"]["dummy_encoding_reference_order"])
+    encoding_type = DummyEncodingReferenceOrder.from_str(input_args[list(input_args.keys())[0]]["dummy_encoding_reference_order"])
     if encoding_type == DummyEncodingReferenceOrder.CUSTOM:
         ref_cols = {site: input_args[site]["reference_columns"] for site in input_args.keys()}
         reference_dict = next(iter(ref_cols.values()))
