@@ -63,7 +63,7 @@ def local_0(args):
         "lambda": lamb,
     }
 
-    computation_output = {"output": output_dict, "cache": cache_dict}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "cache": cache_dict})
     ut.log(f'\nlocal_0() method output: {str(computation_output)} ', args["state"])
 
     return  computation_output
@@ -125,7 +125,7 @@ def local_1(args):
         "dependents": dependents.to_json(orient='split')
     }
 
-    computation_output = {"output": output_dict, "cache": cache_dict}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "cache": cache_dict})
     ut.log(f'\nlocal_1() method output: {str(computation_output)} ', args["state"])
 
     return  computation_output
@@ -201,9 +201,8 @@ def local_2(args):
 
     cache_dict = {}
 
-    computation_output = {"output": output_dict, "cache": cache_dict}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "cache": cache_dict})
     ut.log(f'\nlocal_2() method output: {str(computation_output)} ', args["state"])
-
 
     return  computation_output
 

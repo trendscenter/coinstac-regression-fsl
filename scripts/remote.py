@@ -43,7 +43,7 @@ def remote_0(args):
 
     cache_dict = {}
 
-    computation_output = {"output": output_dict, "cache": cache_dict}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "cache": cache_dict})
     ut.log(f'\nremote_0() method output: {str(computation_output)} ', args["state"])
 
 
@@ -109,7 +109,7 @@ def remote_1(args):
         "local_stats_dict": all_local_stats_dicts
     }
 
-    computation_output = {"output": output_dict, "cache": cache_dict}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "cache": cache_dict})
     ut.log(f'\nremote_1() method output: {str(computation_output)} ', args["state"])
 
     return computation_output
@@ -215,7 +215,7 @@ def remote_2(args):
 
     output_dict = {"regressions": dict_list}
 
-    computation_output = {"output": output_dict, "success": True}
+    computation_output = ut.get_encoded_dict({"output": output_dict, "success": True})
     ut.log(f'\nremote_2() method output: {str(computation_output)} ', args["state"])
 
 
