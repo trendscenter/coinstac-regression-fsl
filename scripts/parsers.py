@@ -148,15 +148,26 @@ def perform_encoding(args, data_f, exclude_cols=(" ")):
     cols_categorical = [col for col in data_f if data_f[col].dtype == object]
     cols_mono = [col for col in data_f if data_f[col].nunique() == 1]
 
-    # Dropping columns with unique values
     data_f = data_f.drop(columns=cols_mono)
 
     # Creating dummies on non-unique categorical variables
     cols_nodrop = [x for x in cols_categorical if x not in cols_mono]
+
+    unique_col_vals={}
+    for col_name in cols_nodrop:
+        unique_col_vals[col_name]=sorted(data_f[col_name].unique())
+
     default_col_sortedval_dict = get_default_dummy_encoding_columns(data_f)
     data_f = create_dummies(data_f, cols_nodrop, False)
-    data_f = adjust_dummy_encoding_columns( data_f, args["input"]["reference_columns"],
-                                           default_col_sortedval_dict)
+
+    #Adjust dummy encoding based on reference.. it is different for local sites vs global
+    ref_col_val_dict = args["input"]["reference_columns"]
+    for col_name in default_col_sortedval_dict.keys():
+        ref_col_val =ref_col_val_dict.get(col_name, default_col_sortedval_dict[col_name])
+        if ref_col_val in unique_col_vals[col_name]:
+            data_f.drop(col_name +"_"+ ref_col_val, inplace=True, axis=1)
+        else:
+            data_f.drop(col_name +"_"+ default_col_sortedval_dict[col_name], inplace=True, axis=1)
 
     data_f = data_f.dropna(axis=0, how="any")
     data_f = sm.add_constant(data_f, has_constant="add")
