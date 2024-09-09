@@ -9,6 +9,8 @@ import os
 import warnings
 
 import pandas as pd
+import utils as ut
+
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -30,11 +32,22 @@ def parse_for_y(args, y_files, y_labels):
                     index_col=0,
                 )
                 y_ = y_[~y_.index.str.contains("Measure:volume")]
+
+                # skipping files with repeated brain regions
+                repeated_brain_regions=set(y_labels).intersection(y_[y_.index.duplicated()].index.tolist())
+                if any(repeated_brain_regions):
+                    ut.log(f'SKIPPING file {os.path.join(args["state"]["baseDirectory"], file)} which has repeated brain region measures for {str(repeated_brain_regions)}', args["state"])
+                    continue
+
                 y_ = y_.apply(pd.to_numeric, errors="ignore")
                 y = pd.merge(y, y_, how="left", left_index=True, right_index=True)
+                ut.log(f'Processed file {os.path.join(args["state"]["baseDirectory"], file)}', args["state"])
+
             except pd.errors.EmptyDataError:
+                ut.log(f'Empty content in the file {os.path.join(args["state"]["baseDirectory"], file)}', args["state"])
                 continue
             except FileNotFoundError:
+                ut.log(f'File not found{os.path.join(args["state"]["baseDirectory"], file)}', args["state"])
                 continue
 
     y = y.T
