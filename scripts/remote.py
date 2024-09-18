@@ -7,10 +7,10 @@ regression with decentralized statistic calculation
 import sys
 from itertools import repeat
 
+import os
 import numpy as np
 import scipy as sp
 import ujson as json
-import pandas as pd
 import json
 import regression as reg
 from remote_ancillary import *
@@ -215,9 +215,12 @@ def remote_2(args):
 
     output_dict = {"regressions": dict_list}
 
+    #Send output dict to local sites as a json file
+    with open(os.path.join(args['state']['transferDirectory'],'global_regression_result.json'), 'w') as fp:
+        json.dump(output_dict, fp, sort_keys=True, indent=4)
+
     computation_output = ut.get_encoded_dict({"output": output_dict, "success": True})
     ut.log(f'\nremote_2() method output: {str(computation_output)} ', args["state"])
-
 
     return computation_output
 
@@ -233,4 +236,5 @@ def start(PARAM_DICT):
         return remote_2(PARAM_DICT)
     else:
         raise ValueError("Error occurred at Remote")
+
 
