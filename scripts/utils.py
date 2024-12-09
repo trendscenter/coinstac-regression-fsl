@@ -21,7 +21,7 @@ def log(msg, state):
 
 
 def get_encoded_dict(dict_with_numpy_types):
-    import json
+    import simplejson as json
     import numpy as np
 
     def np_encoder(obj):
@@ -37,4 +37,4 @@ def get_encoded_dict(dict_with_numpy_types):
         elif isinstance(obj, (np.bool_)):
             return bool(obj)
 
-    return json.loads(json.dumps(dict_with_numpy_types, default=np_encoder))
+    return json.loads(json.dumps(dict_with_numpy_types, default=np_encoder, ignore_nan=True))
